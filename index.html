@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title"></title> <!-- Dynamic page title -->
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN for GitHub icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Marked.js for Markdown to HTML conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Configuration file -->
+    <script src="config.js"></script>
+    <style>
+        /* Custom font for a clean look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Darker gray background (gray-900) */
+            color: #e2e8f0; /* Light text for contrast */
+        }
+        /* Style for project cards on hover */
+        .project-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border-radius: 0.75rem; /* Rounded corners */
+        }
+        .project-card:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* More prominent shadow for dark theme */
+        }
+        /* Button styling */
+        .btn-primary {
+            background-color: #4a5568; /* Gray 700 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #2d3748; /* Gray 800 */
+        }
+        .btn-secondary {
+            background-color: #2d3748; /* Gray 800 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease-in-out;
+        }
+        .btn-secondary:hover {
+            background-color: #4a5568; /* Gray 700 */
+        }
+        /* Main content area */
+        #app-container {
+            min-height: calc(100vh - 10rem); /* Ensure footer stays at bottom on short content */
+        }
+        /* Styling for rendered Markdown content */
+        .markdown-content h1 { @apply text-3xl font-bold mb-4 mt-6; }
+        .markdown-content h2 { @apply text-2xl font-bold mb-3 mt-5; }
+        .markdown-content h3 { @apply text-xl font-bold mb-2 mt-4; }
+        .markdown-content p { @apply mb-4 leading-relaxed; }
+        .markdown-content ul { @apply list-disc list-inside ml-4 mb-4; }
+        .markdown-content ol { @apply list-decimal list-inside ml-4 mb-4; }
+        .markdown-content li { @apply mb-1; }
+        .markdown-content a { @apply text-blue-400 hover:underline; }
+        .markdown-content blockquote { @apply border-l-4 border-gray-500 pl-4 italic text-gray-400 mb-4; }
+        .markdown-content img { @apply max-w-full h-auto rounded-md my-4; }
+        .markdown-content table { @apply w-full border-collapse mb-4; }
+        .markdown-content th, .markdown-content td { @apply border border-gray-600 px-4 py-2 text-left; }
+        .markdown-content th { @apply bg-gray-700 font-semibold; }
+
+        /* Specific styling for inline code */
+        .markdown-content code {
+            @apply bg-gray-700 text-pink-300 px-1 py-0.5 rounded text-sm;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Monospace font */
+        }
+
+        /* Specific styling for code blocks (preformatted text) */
+        .markdown-content pre {
+            background-color: #0d1117; /* A very dark, almost black, background for code blocks */
+            @apply p-4 rounded-lg overflow-x-auto mb-4 border border-gray-700 shadow-inner; /* Darker background, more padding, border, shadow */
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Monospace font */
+            line-height: 1.5; /* Better readability */
+            white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+            word-break: break-all; /* Break words to prevent overflow */
+        }
+        .markdown-content pre code {
+            @apply block bg-transparent p-0 text-green-300; /* Reset background, full block, code highlight color */
+            font-size: 0.9rem; /* Slightly smaller font for blocks */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex flex-col min-h-screen">
+    <div id="app-container" class="container mx-auto px-4 py-8 flex-grow">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold text-blue-400 mb-4 rounded-lg bg-gray-800 p-4 shadow-md">
+                <i class="fab fa-github text-gray-400"></i> <span id="header-title"></span>
+            </h1>
+            <p class="text-xl text-gray-400" id="header-subtitle"></p>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="content-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Project cards will be loaded here by JavaScript -->
+            <div class="col-span-full text-center text-gray-400 text-lg">
+                <p id="loading-projects-text"></p>
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-100 mx-auto mt-4" role="status" aria-label="Loading spinner"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="text-center py-6 bg-gray-800 text-gray-400 mt-auto rounded-t-lg shadow-inner">
+        <p id="footer-text"></p>
+        <p class="text-sm" id="footer-built-with-text"></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set dynamic text from config
+            document.getElementById('page-title').textContent = config.pageTitle;
+            // Changed to uppercase for the header title
+            document.getElementById('header-title').textContent = `${config.githubUsername.toUpperCase()}'s ${config.headerTitle}`;
+            document.getElementById('header-subtitle').textContent = config.headerSubtitle;
+            document.getElementById('footer-text').textContent = `© ${new Date().getFullYear()} ${config.githubUsername}. ${config.footerText}`;
+            document.getElementById('footer-built-with-text').textContent = config.footerBuiltWithText;
+            document.getElementById('loading-projects-text').textContent = config.loadingProjectsText;
+
+
+            const githubUsername = config.githubUsername;
+            const apiUrl = `https://api.github.com/users/${githubUsername}/repos?per_page=100`; // Fetch up to 100 repos
+            const contentArea = document.getElementById('content-area');
+
+            let allRepositories = []; // To store fetched repositories
+
+            // Function to fetch GitHub repositories
+            async function fetchRepositories() {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`GitHub API error: ${response.statusText}`);
+                    }
+                    allRepositories = await response.json();
+                    // Filter out forks if desired (uncomment below)
+                    // allRepositories = allRepositories.filter(repo => !repo.fork);
+                    // Sort repositories by pushed_at (last updated) in descending order
+                    allRepositories.sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+                    displayProjectList(allRepositories);
+                } catch (error) {
+                    console.error("Failed to fetch repositories:", error);
+                    contentArea.innerHTML = `
+                        <div class="col-span-full text-center text-red-400 text-xl p-8 bg-gray-800 rounded-lg shadow-md">
+                            <p class="font-bold">${config.errorLoadingProjectsTitle}</p>
+                            <p>${error.message}</p>
+                            <p class="text-gray-400 text-base mt-2">${config.errorLoadingProjectsMessage}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Function to display the list of projects (main page view)
+            function displayProjectList(repos) {
+                contentArea.innerHTML = ''; // Clear loading message
+
+                if (repos.length === 0) {
+                    contentArea.innerHTML = `
+                        <div class="col-span-full text-center text-gray-400 text-xl p-8 bg-gray-800 rounded-lg shadow-md">
+                            <p>${config.noPublicReposFound} ${githubUsername}.</p>
+                            <p class="text-lg mt-2">${config.noPublicReposFoundHint}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                repos.forEach(repo => {
+                    const description = repo.description || 'No description provided.';
+                    const card = document.createElement('div');
+                    card.className = 'project-card bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col justify-between items-start';
+                    card.innerHTML = `
+                        <h2 class="text-2xl font-bold text-gray-100 mb-3">${repo.name}</h2>
+                        <p class="text-gray-300 text-base mb-4 flex-grow">${description}</p>
+                        <button class="view-details-btn btn-primary mt-4 cursor-pointer" data-repo-name="${repo.name}">
+                            ${config.viewProjectDetailsButtonText}
+                        </button>
+                    `;
+                    contentArea.appendChild(card);
+                });
+
+                // Add event listeners to the "View Project Details" buttons
+                document.querySelectorAll('.view-details-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const repoName = event.target.dataset.repoName;
+                        const selectedRepo = allRepositories.find(repo => repo.name === repoName);
+                        if (selectedRepo) {
+                            displayProjectDetails(selectedRepo);
+                        }
+                    });
+                });
+            }
+
+            // Function to fetch and display individual project details
+            async function displayProjectDetails(repo) {
+                const description = repo.description || 'No description provided.';
+                contentArea.innerHTML = `
+                    <div class="col-span-full bg-gray-800 rounded-lg shadow-lg p-8 relative pt-20"> <!-- Increased top padding -->
+                        <div class="absolute top-4 left-4">
+                            <button id="home-button" class="btn-primary inline-flex items-center">
+                                <i class="fas fa-home mr-2"></i> Home
+                            </button>
+                        </div>
+                        <header class="text-center mb-8">
+                            <h1 class="text-4xl font-extrabold text-blue-400 mb-4 rounded-lg bg-gray-700 p-4 shadow-sm">
+                                ${repo.name}
+                            </h1>
+                            <p class="text-lg text-gray-400">${description}</p>
+                        </header>
+
+                        <section class="bg-gray-700 rounded-lg shadow-inner p-8 mb-8">
+                            <h2 class="text-2xl font-bold text-gray-100 mb-4">${config.repositoryLinkTitle}</h2>
+                            <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center btn-secondary">
+                                <i class="fab fa-github mr-3 text-xl"></i>
+                                ${config.goToGithubRepoButtonText}
+                            </a>
+                            <p class="text-gray-400 mt-4 text-sm">${config.projectHostedOnGithubText}</p>
+                        </section>
+
+                        <section class="bg-gray-700 rounded-lg shadow-inner p-8">
+                            <h2 class="text-2xl font-bold text-gray-100 mb-4">${config.projectOverviewTitle}</h2>
+                            <div id="project-overview-content" class="markdown-content text-gray-300">
+                                <p>${config.loadingReadmeText}</p>
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-100 mx-auto mt-4" role="status" aria-label="${config.loadingProjectsSpinnerAltText}"></div>
+                            </div>
+                        </section>
+
+                        <div class="text-center mt-8">
+                            <button id="back-to-list-btn" class="btn-primary inline-flex items-center">
+                                <i class="fas fa-arrow-left mr-2"></i> ${config.backToAllProjectsButtonText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add event listener to the "Home" button
+                document.getElementById('home-button').addEventListener('click', () => {
+                    displayProjectList(allRepositories); // Go back to the main list
+                });
+
+                // Add event listener to the "Back to All Projects" button
+                document.getElementById('back-to-list-btn').addEventListener('click', () => {
+                    displayProjectList(allRepositories); // Go back to the main list
+                });
+
+                const projectOverviewContent = document.getElementById('project-overview-content');
+
+                // Check if README content is already cached
+                if (repo.renderedReadme) {
+                    projectOverviewContent.innerHTML = repo.renderedReadme;
+                    return;
+                }
+
+                // Fetch README.md content
+                try {
+                    const readmeUrl = `https://api.github.com/repos/${githubUsername}/${repo.name}/contents/README.md`;
+                    const readmeResponse = await fetch(readmeUrl);
+
+                    if (!readmeResponse.ok) {
+                        // If README.md doesn't exist or other error
+                        if (readmeResponse.status === 404) {
+                            let placeholderListHtml = config.projectOverviewPlaceholderListItems.map(item => `<li>${item}</li>`).join('');
+                            projectOverviewContent.innerHTML = `
+                                <p class="text-gray-400">${config.noReadmeFoundText}</p>
+                                <p class="text-gray-500 text-sm mt-2">${config.noReadmeFoundHint}</p>
+                                <p class="text-gray-300 mt-4">${config.projectOverviewPlaceholderText1}</p>
+                                <p class="text-gray-300">${config.projectOverviewPlaceholderText2}</p>
+                                <ul class="list-disc list-inside text-gray-300 ml-4 mt-2">
+                                    ${placeholderListHtml}
+                                </ul>
+                            `;
+                        } else {
+                            throw new Error(`Failed to fetch README: ${readmeResponse.statusText}`);
+                        }
+                        return;
+                    }
+
+                    const readmeData = await readmeResponse.json();
+                    // The content is Base64 encoded, decode it
+                    const decodedContent = atob(readmeData.content);
+
+                    // Convert Markdown to HTML
+                    const renderedHtml = marked.parse(decodedContent);
+
+                    // Cache the rendered HTML
+                    repo.renderedReadme = renderedHtml;
+
+                    projectOverviewContent.innerHTML = renderedHtml;
+
+                } catch (error) {
+                    console.error("Error fetching or rendering README:", error);
+                    projectOverviewContent.innerHTML = `
+                        <p class="text-red-400 font-bold">${config.errorLoadingReadmeTitle}</p>
+                        <p class="text-gray-400 text-sm">${error.message}</p>
+                    `;
+                }
+            }
+
+            // Initial fetch and display when the page loads
+            fetchRepositories();
+        });
+    </script>
+</body>
+</html>
