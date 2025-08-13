@@ -243,11 +243,19 @@
 
                 repos.forEach(repo => {
                     const description = repo.description || 'No description provided.';
+                    const lastUpdated = new Date(repo.pushed_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
                     const card = document.createElement('div');
                     card.className = 'project-card bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col justify-between items-start';
                     card.innerHTML = `
-                        <h2 class="text-2xl font-bold text-gray-100 mb-3">${repo.name}</h2>
-                        <p class="text-gray-300 text-base mb-4 flex-grow">${description}</p>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-100 mb-3">${repo.name}</h2>
+                            <p class="text-gray-300 text-base mb-4 flex-grow">${description}</p>
+                            <p class="text-sm text-gray-400">Last Updated: ${lastUpdated}</p>
+                        </div>
                         <button class="view-details-btn btn-primary mt-4 cursor-pointer" data-repo-name="${repo.name}">
                             ${config.viewProjectDetailsButtonText}
                         </button>
@@ -257,7 +265,7 @@
 
                 document.querySelectorAll('.view-details-btn').forEach(button => {
                     button.addEventListener('click', (event) => {
-                        const repoName = event.target.dataset.repoName;
+                        const repoName = event.target.closest('.project-card').querySelector('h2').textContent;
                         const selectedRepo = allRepositories.find(repo => repo.name === repoName);
                         if (selectedRepo) {
                             displayProjectDetails(selectedRepo);
@@ -268,6 +276,11 @@
 
             async function displayProjectDetails(repo) {
                 const description = repo.description || 'No description provided.';
+                const lastUpdated = new Date(repo.pushed_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
                 contentArea.innerHTML = `
                     <div class="col-span-full bg-gray-800 rounded-lg shadow-lg p-8 relative pt-20">
                         <div class="absolute top-4 left-4">
@@ -280,6 +293,7 @@
                                 ${repo.name}
                             </h1>
                             <p class="text-lg text-gray-400">${description}</p>
+                            <p class="text-sm text-gray-500 mt-2">Last Updated: ${lastUpdated}</p>
                         </header>
                         <section class="bg-gray-700 rounded-lg shadow-inner p-8 mb-8">
                             <h2 class="text-2xl font-bold text-gray-100 mb-4">${config.repositoryLinkTitle}</h2>
